@@ -1,41 +1,32 @@
 """
-Chapter 03 — Chains with IBM watsonx (bonus)
-=============================================
-Goal: Same LCEL chain pattern but using IBM watsonx as the LLM.
+Chapter 03 — Chains with a different Ollama model (bonus)
+==========================================================
+Goal: Show that you can swap the model in a chain without changing anything else.
 
 What you learn:
-- ChatWatsonx: LangChain-compatible wrapper for IBM watsonx models
-- You can swap out any LLM in a chain without changing the rest of the code
-- This is the power of LCEL — the chain is LLM-agnostic
+- You can use any Ollama model just by changing the model name string
+- The chain structure (prompt | llm | parser) stays exactly the same
+- This is the power of LCEL — the chain is model-agnostic
+
+Try swapping "llama3.2" for any other model you have pulled locally.
 
 Run: python chapter-03-chains/chainswx.py
 """
 
-import os
-from dotenv import load_dotenv
+from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_ibm import ChatWatsonx
+from langchain_core.output_parsers import StrOutputParser
 
-load_dotenv(dotenv_path=".env")
-api_key = os.getenv("WATSONX_API_KEY")
-url = os.getenv("WATSONX_URL")
-space_id = os.getenv("WATSONX_SPACE_ID")
-deploy_id = os.getenv("WATSONX_DEPLOYMENT_ID")
-
-# ChatWatsonx is a LangChain-native LLM wrapper for IBM watsonx
-llm = ChatWatsonx(
-    deployment_id=deploy_id,
-    url=url,
-    api_key=api_key,
-    space_id=space_id,
-)
+# Swap the model name to use a different locally available Ollama model
+# e.g. "mistral", "gemma2", "phi3" — whatever you have pulled
+llm = ChatOllama(model="llama3.2")
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You are a helpful assistant who explains things simply."),
     ("human", "Explain {topic} in simple terms for a complete beginner.")
 ])
 
-# Same chain pattern as chains.py — only the LLM changed
-chain = prompt | llm
+# Identical chain structure to chains.py — only the model name changed
+chain = prompt | llm | StrOutputParser()
 response = chain.invoke({"topic": "Python lists"})
 print(response)
